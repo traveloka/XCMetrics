@@ -49,15 +49,15 @@ final class BuildMetrics: Content {
     /// Build data, mandatory
     let build: Build
 
-    let targets: [Target]
+    var targets: [Target]
 
-    let steps: [Step]
+    var steps: [Step]
 
-    let warnings: [BuildWarning]?
+    var warnings: [BuildWarning]?
 
-    let errors: [BuildError]?
+    var errors: [BuildError]?
 
-    let notes: [BuildNote]?
+    var notes: [BuildNote]?
 
     let swiftFunctions: [SwiftFunction]?
 

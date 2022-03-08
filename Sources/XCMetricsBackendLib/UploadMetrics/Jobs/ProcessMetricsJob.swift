@@ -60,7 +60,7 @@ class ProcessMetricsJob: Job {
                 self.semaphore.signal()
             }
             let logFile: LogFile
-            let buildMetrics: BuildMetrics
+            var buildMetrics: BuildMetrics
             do {
                 logWithTimestamp(context.logger, msg: "[ProcessMetricsJob] fetching log from \(payload.logURL)")
                 logFile = try self.logFileRepository.get(logURL: payload.logURL)
@@ -73,6 +73,17 @@ class ProcessMetricsJob: Job {
                 promise.fail(error)
                 return
             }
+
+            guard let filteredMetrics =  self.filterLog(buildMetrics) else {
+                logWithTimestamp(context.logger, msg: "[ProcessMetricsJob] Skipping build failures...")
+
+                promise.succeed(())
+
+                return promise.futureResult
+            }
+
+            buildMetrics = filteredMetrics
+
             logWithTimestamp(context.logger, msg: "[ProcessMetricsJob] log parsed \(payload.logURL)")
             _ = self.metricsRepository.insertBuildMetrics(buildMetrics, using: eventLoop)
                 .flatMapAlways { (result) -> EventLoopFuture<Void> in
@@ -96,6 +107,25 @@ class ProcessMetricsJob: Job {
                 }
         }
         return promise.futureResult
+    }
+
+    /**
+     * Process and filter log. Since we only will use to benchmark the build time,
+     * this method will throw all unused data for POC, such as build errors, warnings, steps, targets, etc.
+     *
+     * @return nil if the log is shouldn't be stored or BuildMetrics with filtered log.
+     */
+    private func filterLog(buildMetrics: BuildMetrics) -> BuildMetrics? {
+        if buildMetrics.build.buildStatus == "failed" || buildMetrics.build.buildStatus == "finished with errors" {
+            return nil
+        }
+
+        // Filter log
+        buildMetrics.targets = [Target]()
+        buildMetrics.steps = [Step]()
+        buildMetrics.warnings = nil
+        buildMetrics.errors = nil
+        buildMetrics.notes = nil
     }
 
     private func removeLocalLog(_ log: LogFile,
