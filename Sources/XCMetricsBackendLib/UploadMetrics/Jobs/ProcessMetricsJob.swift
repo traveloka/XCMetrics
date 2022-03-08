@@ -116,7 +116,27 @@ class ProcessMetricsJob: Job {
      * @return nil if the log is shouldn't be stored or BuildMetrics with filtered log.
      */
     private func filterLog(buildMetrics: BuildMetrics) -> BuildMetrics? {
-        if buildMetrics.build.buildStatus == "failed" || buildMetrics.build.buildStatus == "finished with errors" {
+        let trackedModules: [String] = [
+            "Flight",
+            "GTCore",
+            "GTHomepage",
+            "Shuttle",
+            "Bus",
+            "Rail",
+            "Train",
+            "Rental",
+            "Experience",
+            "Groceries",
+            "Health",
+            "Booking"
+        ]
+
+        let isProjectShouldBeTracked = trackedModules.contains { element in
+            return buildMetrics.build.projectName.contains(element)
+        }
+
+        if (buildMetrics.build.buildStatus == "failed" || buildMetrics.build.buildStatus == "finished with errors")
+            && !isProjectShouldBeTracked  {
             return nil
         }
 
