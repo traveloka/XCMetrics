@@ -79,7 +79,7 @@ class ProcessMetricsJob: Job {
 
                 promise.succeed(())
 
-                return promise.futureResult
+                return
             }
 
             buildMetrics = filteredMetrics
@@ -115,7 +115,7 @@ class ProcessMetricsJob: Job {
      *
      * @return nil if the log is shouldn't be stored or BuildMetrics with filtered log.
      */
-    private func filterLog(buildMetrics: BuildMetrics) -> BuildMetrics? {
+    private func filterLog(_ buildMetrics: BuildMetrics) -> BuildMetrics? {
         let trackedModules: [String] = [
             "Flight",
             "GTCore",
@@ -146,6 +146,8 @@ class ProcessMetricsJob: Job {
         buildMetrics.warnings = nil
         buildMetrics.errors = nil
         buildMetrics.notes = nil
+
+        return buildMetrics
     }
 
     private func removeLocalLog(_ log: LogFile,
